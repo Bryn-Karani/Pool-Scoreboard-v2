@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Scoreboard Control</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0d14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:max(16px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));background:#0a0d14;color:#fff;font-family:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;font-size:17px;-webkit-user-select:none;user-select:none}
@@ -161,6 +166,7 @@ addEventListener("online",flush);
 function wake(){try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(function(){})}catch(e){}}
 wake();document.addEventListener("visibilitychange",function(){if(!document.hidden){wake();dirty=true;flush()}});
 renderH();draw();send();
+if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
 </script>
 </body>
-  </html>
+</html>
