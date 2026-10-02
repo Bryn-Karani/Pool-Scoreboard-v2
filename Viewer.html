@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scoreboard Viewer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<style>
+html,body{height:100%;margin:0;overflow:hidden;background:transparent}
+body{display:flex;align-items:center;justify-content:center}
+svg{display:block;width:100%;height:auto;max-height:100%;transition:opacity .3s}
+svg.off{opacity:0}
+text{font-family:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;font-weight:700;fill:#fff;font-variant-numeric:tabular-nums;transition:opacity .4s}
+text.win{fill:#ffd84a}
+text.dim{opacity:.5}
+.name{font-size:31px;letter-spacing:.5px}
+.sc{font-size:64px;text-anchor:middle}
+.det{font-size:23px;text-anchor:middle;letter-spacing:.5px}
+.pop{animation:pop .35s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes pop{0%{transform:scale(1.3);fill:#ffd84a}100%{transform:scale(1)}}
+.brk{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.pop,.brk{animation:none}}
+</style>
+</head>
+<body>
+<!-- Viewer.html?room=CODE   optional: &bg=green -->
+<svg id="bd" class="off" viewBox="100 54 1520 150" role="img" aria-label="Live scoreboard">
+<defs>
+  <linearGradient id="gL" x1="0" x2="1"><stop offset="0" stop-color="#0c1a3a"/><stop offset=".6" stop-color="#080d1a"/><stop offset="1" stop-color="#060912"/></linearGradient>
+  <linearGradient id="gR" x1="0" x2="1"><stop offset="0" stop-color="#060912"/><stop offset=".4" stop-color="#080d1a"/><stop offset="1" stop-color="#2a0b14"/></linearGradient>
+  <linearGradient id="gB" x1="0" x2="1"><stop offset="0" stop-color="#0b1b40"/><stop offset=".5" stop-color="#070b15"/><stop offset="1" stop-color="#2a0b14"/></linearGradient>
+  <linearGradient id="gsB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f5bff"/><stop offset="1" stop-color="#4f8bff"/></linearGradient>
+  <linearGradient id="gsR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4a58"/><stop offset="1" stop-color="#e0101f"/></linearGradient>
+  <linearGradient id="lnB" x1="0" x2="1"><stop offset="0" stop-color="#2f6bff"/><stop offset="1" stop-color="#2f6bff" stop-opacity=".1"/></linearGradient>
+  <linearGradient id="lnR" x1="0" x2="1"><stop offset="0" stop-color="#ff2a3a" stop-opacity=".1"/><stop offset="1" stop-color="#ff2a3a"/></linearGradient>
+  <filter id="glow" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+
+<!-- TOP BAR -->
+<polygon points="150,66 620,66 655,138 168,138" fill="url(#gL)"/>
+<polygon points="620,66 1050,66 1015,138 655,138" fill="#05080f"/>
+<polygon points="1050,66 1550,66 1528,138 1015,138" fill="url(#gR)"/>
+<g fill="none" stroke-width="2" stroke-linejoin="miter">
+  <polyline points="152,66 620,66 655,138 170,138" stroke="url(#lnB)" opacity=".55" filter="url(#glow)"/>
+  <polyline points="152,66 620,66 655,138 170,138" stroke="url(#lnB)"/>
+  <polyline points="1548,66 1050,66 1015,138 1526,138" stroke="url(#lnR)" opacity=".55" filter="url(#glow)"/>
+  <polyline points="1548,66 1050,66 1015,138 1526,138" stroke="url(#lnR)"/>
+</g>
+<polygon points="122,66 154,66 174,138 146,138" fill="url(#gsB)"/>
+<polygon points="1522,66 1554,66 1532,138 1504,138" fill="url(#gsR)"/>
+
+<!-- WINNER BARS -->
+<line id="wA" x1="170" y1="137" x2="655" y2="137" stroke="#ffd84a" stroke-width="4" visibility="hidden"/>
+<line id="wB" x1="1015" y1="137" x2="1526" y2="137" stroke="#ffd84a" stroke-width="4" visibility="hidden"/>
+
+<!-- BREAK INDICATORS -->
+<circle id="kA" class="brk" cx="214" cy="98" r="9" fill="#fff" visibility="hidden"/>
+<circle id="kB" class="brk" cx="1474" cy="98" r="9" fill="#fff" visibility="hidden"/>
+
+<text id="nA" class="name" x="248" y="110"></text>
+<text id="nB" class="name" x="1438" y="110" text-anchor="end"></text>
+<text id="sA" class="sc" x="725" y="122">0</text>
+<text id="pen" class="sc" x="835" y="122" style="font-size:54px" visibility="hidden">(0)</text>
+<text id="scB" class="sc" x="945" y="122">0</text>
+
+<!-- DETAILS BAR -->
+<g id="dt">
+  <polygon points="243,143 1430,143 1406,192 268,192" fill="url(#gB)"/>
+  <polyline points="268,192 243,143 835,143" fill="none" stroke="#2f6bff" stroke-width="2" opacity=".5" filter="url(#glow)"/>
+  <polyline points="268,192 243,143 835,143" fill="none" stroke="#2f6bff" stroke-width="2"/>
+  <polyline points="835,143 1430,143 1406,192" fill="none" stroke="#ff4a58" stroke-width="2" opacity=".5" filter="url(#glow)"/>
+  <polyline points="835,143 1430,143 1406,192" fill="none" stroke="#ff4a58" stroke-width="2"/>
+  <polyline points="268,192 835,192" fill="none" stroke="#2f6bff" stroke-width="2" opacity=".7"/>
+  <polyline points="835,192 1406,192" fill="none" stroke="#ff4a58" stroke-width="2" opacity=".7"/>
+  <line x1="769" y1="154" x2="769" y2="180" stroke="#2f6bff" stroke-width="2"/>
+  <line x1="902" y1="154" x2="902" y2="180" stroke="#ff2a3a" stroke-width="2"/>
+  <circle cx="835" cy="166" r="15" fill="#fff"/>
+  <text x="835" y="173" text-anchor="middle" style="font-size:20px;fill:#0a0a0a">8</text>
+  <text id="ev" class="det" x="520" y="174"></text>
+  <text id="rd" class="det" x="1155" y="174"></text>
+</g>
+</svg>
+<script>
+var q=new URLSearchParams(location.search),room=q.get("room")||"";
+if(q.get("bg")==="green")document.body.style.background="#00b140";
+var $=function(i){return document.getElementById(i)},cur={};
+function fit(el,max){el.style.fontSize="";var f=parseFloat(getComputedStyle(el).fontSize);
+  while(el.getComputedTextLength()>max&&f>12){f-=1;el.style.fontSize=f+"px"}}
+function set(id,v){var e=$(id);if(e.textContent!==String(v)){e.textContent=v;return true}return false}
+function vis(id,on){$(id).setAttribute("visibility",on?"visible":"hidden")}
+function draw(s){
+  if(!s||typeof s!=="object")return;
+  var rm=matchMedia("(prefers-reduced-motion:reduce)").matches;
+  [["a","sA"],["b","scB"]].forEach(function(p){
+    if(set(p[1],s[p[0]])&&cur[p[0]]!==undefined&&!rm){var e=$(p[1]);e.classList.remove("pop");void e.getBBox();e.classList.add("pop")}
+    cur[p[0]]=s[p[0]]});
+  var hp=s.p!==null&&s.p!==undefined;
+  vis("pen",hp);if(hp)set("pen","("+s.p+")");
+  if(set("nA",(s.na||"").toUpperCase()))fit($("nA"),350);
+  if(set("nB",(s.nb||"").toUpperCase()))fit($("nB"),370);
+  if(set("ev",(s.ev||"").toUpperCase()))fit($("ev"),440);
+  if(set("rd",(s.rd||"").toUpperCase()))fit($("rd"),440);
+  // winner: reached race-to and ahead
+  var w=0;if(hp){if(s.a>=s.p&&s.a>s.b)w=1;else if(s.b>=s.p&&s.b>s.a)w=2}
+  $("nA").classList.toggle("win",w===1);$("sA").classList.toggle("win",w===1);
+  $("nB").classList.toggle("win",w===2);$("scB").classList.toggle("win",w===2);
+  $("nA").classList.toggle("dim",w===2);$("sA").classList.toggle("dim",w===2);
+  $("nB").classList.toggle("dim",w===1);$("scB").classList.toggle("dim",w===1);
+  vis("wA",w===1);vis("wB",w===2);
+  // break indicator (hidden once a winner is decided)
+  vis("kA",s.k===1&&!w);vis("kB",s.k===2&&!w);
+  $("bd").classList.remove("off");
+}
+function parse(t){try{return JSON.parse(t)}catch(e){return null}}
+var base="https://ntfy.sh/sb-"+encodeURIComponent(room),es=null,seen=0;
+function load(){fetch(base+"/json?poll=1&since=latest").then(function(r){return r.text()}).then(function(t){
+  var last=null;t.trim().split("\n").forEach(function(l){var m=parse(l);if(m&&m.event==="message")last=m.message});
+  if(last)draw(parse(last))}).catch(function(){})}
+function connect(){if(es)es.close();seen=Date.now();es=new EventSource(base+"/sse");
+  es.onmessage=function(e){seen=Date.now();var m=parse(e.data);if(m&&m.message)draw(parse(m.message))};
+  es.addEventListener("open",function(){seen=Date.now();load()});
+  es.addEventListener("keepalive",function(){seen=Date.now()})}
+var DEMO={a:0,b:0,p:1,k:1,na:"Team A",nb:"Team B",ev:"Event name",rd:"Round | Stage"};
+if(!room)draw(DEMO);
+else setTimeout(function(){if($("bd").classList.contains("off"))draw(DEMO)},2500);
+if(room){load();connect();
+  setInterval(load,5000);
+  setInterval(function(){if(Date.now()-seen>30000)connect()},10000);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden){load();connect()}});
+  addEventListener("online",function(){load();connect()})}
+try{var bc=new BroadcastChannel("sb-"+room);bc.onmessage=function(e){draw(e.data)}}catch(e){}
+</script>
+</body>
+  </html>
