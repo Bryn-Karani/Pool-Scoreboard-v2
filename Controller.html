@@ -72,10 +72,11 @@ details.link summary{font-weight:700;cursor:pointer}
 </div>
 <script>
 var $=function(i){return document.getElementById(i)};
+var DB="https://pool-scoreboard-v2-default-rtdb.firebaseio.com";DB=DB.replace(/\/+$/,"");
 var q=new URLSearchParams(location.search),room=q.get("room");
 if(!room){try{room=localStorage.getItem("sbroom")}catch(e){} if(!room)room=Math.random().toString(36).slice(2,10);
   try{localStorage.setItem("sbroom",room)}catch(e){} try{history.replaceState(null,"","?room="+room)}catch(e){}}
-var viewer;try{viewer=new URL("Viewer.html?room="+room,location.href).href}catch(e){viewer="Viewer.html?room="+room}$("vl").textContent=viewer;
+var viewer;try{viewer=new URL("Viewer.html?room="+room+"&db="+encodeURIComponent(DB),location.href).href}catch(e){viewer="Viewer.html?room="+room+"&db="+encodeURIComponent(DB)}$("vl").textContent=viewer;
 var DEF={a:0,b:0,p:1,k:0,na:"Team A",nb:"Team B",ev:"",rd:""},s=Object.assign({},DEF),hist=[];
 try{var v=localStorage.getItem("sb-"+room);if(v)s=Object.assign({},DEF,JSON.parse(v))}catch(e){}
 function fields(){$("iA").value=s.na;$("iB").value=s.nb;$("iE").value=s.ev;$("iR").value=s.rd}
@@ -83,19 +84,23 @@ fields();
 var bc=null;try{bc=new BroadcastChannel("sb-"+room)}catch(e){}
 var timer=null,dirty=true,sending=false;
 function state(t,c){$("st").textContent=t;$("dot").className="dot "+(c||"")}
+var failed=false;
 function flush(){
   if(sending||!dirty)return;
+  if(DB.indexOf("http")!==0){state("Set Firebase URL","bad");return}
   if(!navigator.onLine){state("Offline, will retry","bad");return}
-  sending=true;dirty=false;var body=JSON.stringify(s);
-  fetch("https://ntfy.sh/sb-"+encodeURIComponent(room),{method:"POST",body:body})
-    .then(function(r){if(!r.ok)throw 0;state("Live","ok")})
-    .catch(function(){dirty=true;state("Send failed, retrying","bad");setTimeout(flush,4000)})
-    .finally(function(){sending=false;if(dirty)setTimeout(flush,100)});
+  sending=true;dirty=false;
+  var ac=new AbortController(),to=setTimeout(function(){ac.abort()},5000);
+  fetch(DB+"/rooms/"+encodeURIComponent(room)+".json",{method:"PUT",body:JSON.stringify(s),signal:ac.signal,keepalive:true})
+    .then(function(r){if(!r.ok){state("Error "+r.status,"bad");throw 0}state("Live","ok")})
+    .catch(function(){dirty=true;failed=true})
+    .finally(function(){clearTimeout(to);sending=false;
+      if(dirty){if(failed){failed=false;setTimeout(flush,1500)}else flush()}});
 }
 function send(){
   try{localStorage.setItem("sb-"+room,JSON.stringify(s))}catch(e){}
   if(bc)bc.postMessage(s);
-  dirty=true;clearTimeout(timer);timer=setTimeout(flush,50);
+  dirty=true;flush();
 }
 function draw(){$("oA").textContent=s.a;$("oB").textContent=s.b;$("oP").value=s.p===null?"":s.p;
   [0,1,2].forEach(function(n){$("k"+n).className="wide"+((s.k||0)===n?" on":"")})}
@@ -158,4 +163,4 @@ wake();document.addEventListener("visibilitychange",function(){if(!document.hidd
 renderH();draw();send();
 </script>
 </body>
-  </html>
+</html>
