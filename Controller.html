@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scoreboard Control</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:max(16px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));background:#0a0d14;color:#fff;font-family:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;font-size:17px;-webkit-user-select:none;user-select:none}
+.wrap{max-width:560px;margin:0 auto;display:grid;gap:12px}
+.top{display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:22px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#888;margin-right:8px;vertical-align:middle}
+.dot.ok{background:#2ecc71}.dot.bad{background:#ff4d5a}
+.status{color:#9aa6bd;font-size:15px}
+.team{border-radius:14px;padding:12px;display:grid;gap:10px}
+.tb{background:linear-gradient(90deg,#10234f,#1a2233)}.tr{background:linear-gradient(270deg,#4a1019,#1a2233)}
+input[type=text]{font:inherit;font-weight:700;font-size:20px;text-transform:uppercase;color:#fff;background:#0d1424;border:1px solid #2a3550;border-radius:8px;padding:10px;width:100%;-webkit-user-select:text;user-select:text}
+.score{display:grid;grid-template-columns:72px 1fr 72px;gap:8px;align-items:center}
+output{text-align:center;font-size:56px;font-weight:700;line-height:1}
+button{font:inherit;font-weight:700;color:#fff;background:#26324d;border:0;border-radius:12px;height:64px;font-size:34px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:active{background:#38476b;transform:scale(.97)}
+.plus{background:#2c7a4b}.plus:active{background:#3a9a60}
+button.on{background:#b8901f;color:#0a0d14}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #8fb0ff;outline-offset:2px}
+.row{display:flex;justify-content:space-between;align-items:center;background:#1a2233;border-radius:12px;padding:10px 12px;gap:10px}
+.row .score{flex:1;grid-template-columns:64px 1fr 64px}
+.row output{font-size:36px}
+#oP{font:inherit;font-weight:700;font-size:36px;text-align:center;color:#fff;background:#0d1424;border:1px solid #2a3550;border-radius:8px;width:100%;min-width:0;height:64px;-webkit-user-select:text;user-select:text}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wide{font-size:16px;height:48px}
+.newm{background:#2c7a4b}
+.link{display:grid;gap:8px;background:#1a2233;border-radius:12px;padding:12px}
+code{word-break:break-all;color:#8fb0ff;font-size:14px;-webkit-user-select:text;user-select:text}
+.brk{display:grid;gap:8px;background:#1a2233;border-radius:12px;padding:10px 12px}
+.brk label{display:flex;align-items:center;gap:8px;color:#9aa6bd;font-size:15px}
+.brk input{width:20px;height:20px}
+details.link summary{font-weight:700;cursor:pointer}
+.item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #2a3550}
+.item .t{flex:1;min-width:0;-webkit-user-select:text;user-select:text}
+.item .t b{display:block;font-size:17px}
+.item .t small{color:#9aa6bd;font-size:13px}
+.item button{height:40px;font-size:14px;padding:0 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>Scoreboard</h1><span class="status"><i class="dot" id="dot"></i><span id="st">Ready</span></span></div>
+
+  <div class="team tb"><input type="text" id="iA" maxlength="22" aria-label="Left team name">
+    <div class="score"><button id="aM" aria-label="Left minus">−</button><output id="oA">0</output><button class="plus" id="aP" aria-label="Left plus">+</button></div></div>
+  <div class="team tr"><input type="text" id="iB" maxlength="22" aria-label="Right team name">
+    <div class="score"><button id="bM" aria-label="Right minus">−</button><output id="oB">0</output><button class="plus" id="bP" aria-label="Right plus">+</button></div></div>
+
+  <div class="brk"><span>Break</span>
+    <div class="acts"><button class="wide" id="k1">◀ Left</button><button class="wide" id="k0">None</button><button class="wide" id="k2">Right ▶</button></div>
+    <label><input type="checkbox" id="auto" checked> Auto-alternate break each frame</label></div>
+
+  <div class="team" style="background:#1a2233"><input type="text" id="iE" maxlength="40" placeholder="Event, e.g. DA VILLE DOUBLE LIFE COMP" aria-label="Event text">
+    <input type="text" id="iR" maxlength="40" placeholder="Round, e.g. SEMI FINAL | LIFE 2" aria-label="Round text"></div>
+  <div class="row"><span>Frames<br><small style="color:#9aa6bd">race to</small></span>
+    <div class="score"><button id="pM" aria-label="Race to minus">−</button><input type="number" id="oP" inputmode="numeric" min="1" max="99" placeholder="off" aria-label="Race to"><button class="plus" id="pP" aria-label="Race to plus">+</button></div></div>
+
+  <div class="acts"><button class="wide" id="undo">Undo</button><button class="wide" id="swap">Swap</button><button class="wide" id="reset">Reset</button></div>
+  <button class="wide newm" id="new">Save match &amp; start new</button>
+
+  <details class="link" id="hd"><summary id="hs">Match history</summary><div id="hl"></div>
+    <button class="wide" id="hclear" style="margin-top:6px">Clear all history</button></details>
+
+  <div class="link"><span>Viewer link for Prism / OBS</span><code id="vl"></code>
+    <div class="acts" style="grid-template-columns:1fr 1fr"><button class="wide" id="copy">Copy link</button><button class="wide" id="open">Open viewer</button></div></div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var q=new URLSearchParams(location.search),room=q.get("room");
+if(!room){try{room=localStorage.getItem("sbroom")}catch(e){} if(!room)room=Math.random().toString(36).slice(2,10);
+  try{localStorage.setItem("sbroom",room)}catch(e){} try{history.replaceState(null,"","?room="+room)}catch(e){}}
+var viewer;try{viewer=new URL("Viewer.html?room="+room,location.href).href}catch(e){viewer="Viewer.html?room="+room}$("vl").textContent=viewer;
+var DEF={a:0,b:0,p:1,k:0,na:"Team A",nb:"Team B",ev:"",rd:""},s=Object.assign({},DEF),hist=[];
+try{var v=localStorage.getItem("sb-"+room);if(v)s=Object.assign({},DEF,JSON.parse(v))}catch(e){}
+function fields(){$("iA").value=s.na;$("iB").value=s.nb;$("iE").value=s.ev;$("iR").value=s.rd}
+fields();
+var bc=null;try{bc=new BroadcastChannel("sb-"+room)}catch(e){}
+var timer=null,dirty=true,sending=false;
+function state(t,c){$("st").textContent=t;$("dot").className="dot "+(c||"")}
+function flush(){
+  if(sending||!dirty)return;
+  if(!navigator.onLine){state("Offline, will retry","bad");return}
+  sending=true;dirty=false;var body=JSON.stringify(s);
+  fetch("https://ntfy.sh/sb-"+encodeURIComponent(room),{method:"POST",body:body})
+    .then(function(r){if(!r.ok)throw 0;state("Live","ok")})
+    .catch(function(){dirty=true;state("Send failed, retrying","bad");setTimeout(flush,4000)})
+    .finally(function(){sending=false;if(dirty)setTimeout(flush,100)});
+}
+function send(){
+  try{localStorage.setItem("sb-"+room,JSON.stringify(s))}catch(e){}
+  if(bc)bc.postMessage(s);
+  dirty=true;clearTimeout(timer);timer=setTimeout(flush,50);
+}
+function draw(){$("oA").textContent=s.a;$("oB").textContent=s.b;$("oP").value=s.p===null?"":s.p;
+  [0,1,2].forEach(function(n){$("k"+n).className="wide"+((s.k||0)===n?" on":"")})}
+function buzz(){try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}}
+function change(fn){hist.push(JSON.stringify(s));if(hist.length>30)hist.shift();fn();buzz();draw();send()}
+function alt(){if($("auto").checked&&s.k)s.k=3-s.k}
+$("aP").onclick=function(){change(function(){s.a++;alt()})};$("aM").onclick=function(){change(function(){s.a=Math.max(0,s.a-1)})};
+$("bP").onclick=function(){change(function(){s.b++;alt()})};$("bM").onclick=function(){change(function(){s.b=Math.max(0,s.b-1)})};
+$("k1").onclick=function(){change(function(){s.k=1})};$("k2").onclick=function(){change(function(){s.k=2})};$("k0").onclick=function(){change(function(){s.k=0})};
+$("pP").onclick=function(){change(function(){s.p=(s.p===null?0:s.p)+1})};
+$("pM").onclick=function(){if(s.p!==null)change(function(){s.p=s.p>0?s.p-1:null})};
+$("swap").onclick=function(){change(function(){var t=s.a;s.a=s.b;s.b=t;t=s.na;s.na=s.nb;s.nb=t;if(s.k)s.k=3-s.k;$("iA").value=s.na;$("iB").value=s.nb})};
+$("reset").onclick=function(){if(confirm("Reset scores to 0?"))change(function(){s.a=0;s.b=0})};
+$("undo").onclick=function(){var h=hist.pop();if(!h)return;s=JSON.parse(h);fields();buzz();draw();send()};
+$("oP").oninput=function(e){var n=parseInt(e.target.value,10);s.p=isNaN(n)||n<1?null:Math.min(99,n);send()};
+$("iA").oninput=function(e){s.na=e.target.value;send()};
+$("iB").oninput=function(e){s.nb=e.target.value;send()};
+$("iE").oninput=function(e){s.ev=e.target.value;send()};
+$("iR").oninput=function(e){s.rd=e.target.value;send()};
+
+// ---- match history ----
+function loadH(){try{return JSON.parse(localStorage.getItem("sbhist")||"[]")}catch(e){return[]}}
+function saveH(h){try{localStorage.setItem("sbhist",JSON.stringify(h))}catch(e){}}
+function line(m){return m.na+" "+m.a+" - "+m.b+" "+m.nb}
+function meta(m){var d=new Date(m.t);return [m.ev,m.rd,d.toLocaleDateString()+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})].filter(Boolean).join(" · ")}
+function renderH(){
+  var h=loadH(),box=$("hl");box.textContent="";
+  $("hs").textContent="Match history ("+h.length+")";
+  $("hclear").style.display=h.length?"":"none";
+  if(!h.length){var e=document.createElement("small");e.style.color="#9aa6bd";e.textContent="No saved matches yet";box.appendChild(e);return}
+  for(var i=h.length-1;i>=0;i--)(function(i){
+    var m=h[i],d=document.createElement("div");d.className="item";
+    var t=document.createElement("div");t.className="t";
+    var b=document.createElement("b");b.textContent=line(m);
+    var sm=document.createElement("small");sm.textContent=meta(m);
+    t.appendChild(b);t.appendChild(sm);
+    var c=document.createElement("button");c.textContent="Copy";
+    c.onclick=function(){var x=line(m)+" | "+meta(m);try{navigator.clipboard.writeText(x).then(function(){state("Copied","ok")})}catch(e){}};
+    var x=document.createElement("button");x.textContent="✕";x.setAttribute("aria-label","Delete match");
+    x.onclick=function(){if(confirm("Delete this match?")){var a=loadH();a.splice(i,1);saveH(a);renderH()}};
+    d.appendChild(t);d.appendChild(c);d.appendChild(x);box.appendChild(d)})(i);
+}
+$("new").onclick=function(){
+  if(s.a+s.b>0){
+    if(!confirm("Save this match and start a new one?"))return;
+    var h=loadH();h.push({t:Date.now(),na:s.na,nb:s.nb,a:s.a,b:s.b,p:s.p,ev:s.ev,rd:s.rd});saveH(h);
+    state("Match saved","ok");
+  }else if(!confirm("Start a new match?"))return;
+  s.a=0;s.b=0;s.k=0;s.na="Team A";s.nb="Team B";hist=[];
+  fields();buzz();draw();send();renderH();
+  $("iA").focus();$("iA").select();
+};
+$("hclear").onclick=function(){if(confirm("Delete ALL saved matches?")){saveH([]);renderH()}};
+
+$("copy").onclick=function(){try{navigator.clipboard.writeText(viewer).then(function(){state("Link copied","ok")})}catch(e){state("Long-press link to copy")}};
+$("open").onclick=function(){window.open(viewer,"_blank")};
+addEventListener("online",flush);
+function wake(){try{navigator.wakeLock&&navigator.wakeLock.request("screen").catch(function(){})}catch(e){}}
+wake();document.addEventListener("visibilitychange",function(){if(!document.hidden){wake();dirty=true;flush()}});
+renderH();draw();send();
+</script>
+</body>
+  </html>
