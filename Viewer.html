@@ -24,7 +24,7 @@ text.dim{opacity:.5}
 </style>
 </head>
 <body>
-<!-- Viewer.html?room=CODE   optional: &bg=green -->
+<!-- Viewer.html?room=CODE&db=DATABASE_URL   optional: &bg=green -->
 <svg id="bd" class="off" viewBox="100 54 1520 150" role="img" aria-label="Live scoreboard">
 <defs>
   <linearGradient id="gL" x1="0" x2="1"><stop offset="0" stop-color="#0c1a3a"/><stop offset=".6" stop-color="#080d1a"/><stop offset="1" stop-color="#060912"/></linearGradient>
@@ -112,23 +112,25 @@ function draw(s){
   vis("kA",s.k===1&&!w);vis("kB",s.k===2&&!w);
   $("bd").classList.remove("off");
 }
+var DB=(q.get("db")||"").replace(/\/+$/,""),st={},es=null,seen=0;
 function parse(t){try{return JSON.parse(t)}catch(e){return null}}
-var base="https://ntfy.sh/sb-"+encodeURIComponent(room),es=null,seen=0;
-function load(){fetch(base+"/json?poll=1&since=latest").then(function(r){return r.text()}).then(function(t){
-  var last=null;t.trim().split("\n").forEach(function(l){var m=parse(l);if(m&&m.event==="message")last=m.message});
-  if(last)draw(parse(last))}).catch(function(){})}
-function connect(){if(es)es.close();seen=Date.now();es=new EventSource(base+"/sse");
-  es.onmessage=function(e){seen=Date.now();var m=parse(e.data);if(m&&m.message)draw(parse(m.message))};
-  es.addEventListener("open",function(){seen=Date.now();load()});
-  es.addEventListener("keepalive",function(){seen=Date.now()})}
+function apply(ev,raw){var m=parse(raw);if(!m)return;var p=m.path||"/",d=m.data;
+  if(ev==="put"){if(p==="/")st=(d&&typeof d==="object")?d:{};else{var k=p.split("/")[1];if(d===null)delete st[k];else st[k]=d}}
+  else if(d){Object.keys(d).forEach(function(k){if(d[k]===null)delete st[k];else st[k]=d[k]})}
+  if(st.a!==undefined)draw(st)}
+function connect(){if(es)es.close();seen=Date.now();
+  es=new EventSource(DB+"/rooms/"+encodeURIComponent(room)+".json");
+  es.addEventListener("put",function(e){seen=Date.now();apply("put",e.data)});
+  es.addEventListener("patch",function(e){seen=Date.now();apply("patch",e.data)});
+  es.addEventListener("keep-alive",function(){seen=Date.now()});
+  es.onerror=function(){setTimeout(function(){if(es&&es.readyState===2)connect()},1500)}}
 var DEMO={a:0,b:0,p:1,k:1,na:"Team A",nb:"Team B",ev:"Event name",rd:"Round | Stage"};
-if(!room)draw(DEMO);
+if(!room||!DB)draw(DEMO);
 else setTimeout(function(){if($("bd").classList.contains("off"))draw(DEMO)},2500);
-if(room){load();connect();
-  setInterval(load,5000);
-  setInterval(function(){if(Date.now()-seen>30000)connect()},10000);
-  document.addEventListener("visibilitychange",function(){if(!document.hidden){load();connect()}});
-  addEventListener("online",function(){load();connect()})}
+if(room&&DB){connect();
+  setInterval(function(){if(Date.now()-seen>60000)connect()},10000);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)connect()});
+  addEventListener("online",connect)}
 try{var bc=new BroadcastChannel("sb-"+room);bc.onmessage=function(e){draw(e.data)}}catch(e){}
 </script>
 </body>
